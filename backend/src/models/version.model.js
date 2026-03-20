@@ -20,10 +20,15 @@ const versionSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
+    message: {
+      type: String,
+      default: "Auto-saved version",
+    },
   },
   { timestamps: true }
 );
 
 versionSchema.index({ file: 1 });
+versionSchema.index({ file: 1, createdAt: -1 });
 
 export default mongoose.model("Version", versionSchema);

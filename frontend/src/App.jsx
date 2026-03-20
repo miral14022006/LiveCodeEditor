@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard/Dashboard';
 import Workspace from './pages/Workspace/Workspace';
 import Settings from './pages/Settings/Settings';
 import Activity from './pages/Activity/Activity';
+import Home from './pages/Home/Home';
 import './index.css';
 
 function App() {
@@ -13,19 +14,19 @@ function App() {
         <Router>
             <div className="app-container">
                 <Routes>
-                    {/* Public Routes (mapped to auth.controller) */}
-                    <Route path="/" element={<Navigate to="/login" replace />} />
+                    {/* Public Routes */}
+                    <Route path="/" element={<Home />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
 
                     {/* Protected Routes */}
-                    <Route path="/dashboard" element={<Dashboard />} />     {/* mapped to dashboard.controller */}
-                    <Route path="/workspace/:projectId" element={<Workspace />} /> {/* mapped to editor.controller, chat.controller, sockets */}
-                    <Route path="/settings" element={<Settings />} />       {/* mapped to settings.controller / user.controller */}
-                    <Route path="/activity" element={<Activity />} />       {/* mapped to activity.controller / history.controller */}
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/workspace/:projectId" element={<Workspace />} />
+                    <Route path="/settings" element={<Settings />} />
+                    <Route path="/activity" element={<Activity />} />
 
                     {/* Fallback */}
-                    <Route path="*" element={<div>404 Not Found</div>} />
+                    <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
             </div>
         </Router>

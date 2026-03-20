@@ -80,7 +80,7 @@ const VoicePanel = ({
             {(isInCall || callActive) && callParticipants.length > 0 && (
                 <div className="voice-participants">
                     <div className="voice-participants-label">
-                        In Call ({callParticipants.length})
+                        In Call — {callParticipants.length}
                     </div>
                     {callParticipants.map((p) => (
                         <div key={p.socketId || p.userId} className="voice-participant">
@@ -88,18 +88,15 @@ const VoicePanel = ({
                                 {getInitials(p.userName)}
                             </div>
                             <span className="voice-participant-name">{p.userName}</span>
-                            {p.isMuted && (
-                                <MicOff size={12} className="voice-participant-muted" />
+                            {p.isMuted ? (
+                                <MicOff size={14} className="voice-participant-muted" />
+                            ) : (
+                                <div className="voice-participant-wave">
+                                    <span className="wave-bar"></span>
+                                    <span className="wave-bar"></span>
+                                    <span className="wave-bar"></span>
+                                </div>
                             )}
-                            <div className="voice-participant-wave">
-                                {!p.isMuted && (
-                                    <>
-                                        <span className="wave-bar"></span>
-                                        <span className="wave-bar"></span>
-                                        <span className="wave-bar"></span>
-                                    </>
-                                )}
-                            </div>
                         </div>
                     ))}
                 </div>
@@ -108,9 +105,10 @@ const VoicePanel = ({
             {/* Status when not in call */}
             {!isInCall && !callActive && (
                 <div className="voice-empty">
-                    <Phone size={20} style={{ opacity: 0.3, marginBottom: '8px' }} />
-                    <p>No active voice call</p>
-                    <p style={{ fontSize: '11px', opacity: 0.5 }}>Click "Start Call" to begin</p>
+                    <div className="voice-empty-icon">
+                        <Phone size={32} />
+                    </div>
+                    <p>No active call session</p>
                 </div>
             )}
         </div>

@@ -4,6 +4,7 @@ import useAuthStore from '../../store/authStore';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { Plus, Zap, FolderDot, Activity as ActivityIcon, Settings as SettingsIcon, LogOut, Search as SearchIcon, Users, User, Share2 } from 'lucide-react';
+import ProjectCard from '../../components/dashboard/ProjectCard';
 
 const Dashboard = () => {
     const navigate = useNavigate();
@@ -15,6 +16,11 @@ const Dashboard = () => {
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [createForm, setCreateForm] = useState({ name: '', description: '', language: 'javascript' });
     const [isCreating, setIsCreating] = useState(false);
+
+    // Share Modal State
+    const [shareModalProject, setShareModalProject] = useState(null);
+    const [shareEmail, setShareEmail] = useState('');
+    const [isSharing, setIsSharing] = useState(false);
 
     // ========== Protect Route ==========
     useEffect(() => {
@@ -64,6 +70,34 @@ const Dashboard = () => {
             toast.error(err.response?.data?.message || 'Failed to create project');
         } finally {
             setIsCreating(false);
+        }
+    };
+
+    
+    // ========== Share Project ==========
+    const handleShareClick = (project, e) => {
+        e.stopPropagation();
+        setShareModalProject(project);
+    };
+
+    const handleShareSubmit = async (e) => {
+        e.preventDefault();
+        if (!shareEmail.trim()) {
+            toast.error('Email is required');
+            return;
+        }
+
+        try {
+            setIsSharing(true);
+            await api.post(`/projects/${shareModalProject._id}/add-collaborator`, { email: shareEmail.trim() });
+            toast.success(`Invitation sent to ${shareEmail}!`);
+            setShareEmail('');
+            setShareModalProject(null);
+            fetchProjects(); // Refresh to see updated collaborator count
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Failed to add collaborator');
+        } finally {
+            setIsSharing(false);
         }
     };
 
@@ -241,40 +275,15 @@ const Dashboard = () => {
 
                             {/* Project Cards */}
                             {filteredProjects.map((project) => (
-                                <div
+                                <ProjectCard
                                     key={project._id}
-                                    className="project-card"
-                                    onClick={() => navigate(`/workspace/${project._id}`)}
-                                >
-                                    <div className="project-card-header">
-                                        <div className="project-card-icon">
-                                            {languageIcons[project.language] || '📄'}
-                                        </div>
-                                        <div className="project-card-actions">
-                                            <button
-                                                className="btn btn-ghost btn-sm"
-                                                onClick={(e) => handleDeleteProject(project._id, e)}
-                                                title="Delete project"
-                                                style={{ color: 'var(--error)', fontSize: '14px', padding: '4px 8px' }}
-                                            >
-                                                🗑
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <h3>{project.title}</h3>
-                                    <p>{project.description || 'No description'}</p>
-
-                                    <div className="project-card-footer">
-                                        <div className="project-card-lang">
-                                            {project.language || 'javascript'}
-                                        </div>
-                                        <div className="project-card-collab">
-                                            👥 {(project.collaborators?.length || 0) + 1}
-                                        </div>
-                                        <div>{formatDate(project.updatedAt)}</div>
-                                    </div>
-                                </div>
+                                    project={project}
+                                    handleDeleteProject={handleDeleteProject}
+                                    handleShareProject={handleShareClick}
+                                    languageIcons={languageIcons}
+                                    formatDate={formatDate}
+                                    navigate={navigate}
+                                />
                             ))}
 
                             {/* Empty state when no projects match search */}
@@ -379,6 +388,41 @@ const Dashboard = () => {
                     </div>
                 </div>
             )}
+        
+            {/* ========== SHARE PROJECT MODAL ========== */}
+            {shareModalProject && (
+                <div className="modal-overlay" onClick={() => setShareModalProject(null)}>
+                    <div className="modal glass-panel" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2>Share "{shareModalProject.title}"</h2>
+                            <button className="modal-close" onClick={() => setShareModalProject(null)}>✕</button>
+                        </div>
+                        <form onSubmit={handleShareSubmit}>
+                            <div className="modal-body">
+                                <div className="form-group">
+                                    <label htmlFor="share-email">Collaborator's Email</label>
+                                    <input
+                                        id="share-email"
+                                        type="email"
+                                        className="form-input"
+                                        placeholder="developer@example.com"
+                                        value={shareEmail}
+                                        onChange={(e) => setShareEmail(e.target.value)}
+                                        autoFocus
+                                    />
+                                </div>
+                                <div className="modal-actions">
+                                    <button type="button" className="btn btn-secondary" onClick={() => setShareModalProject(null)}>Cancel</button>
+                                    <button type="submit" className="btn btn-primary" disabled={isSharing}>
+                                        {isSharing ? <><span className="spinner"></span>Sending...</> : 'Send Invite'}
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
         </div>
     );
 };
