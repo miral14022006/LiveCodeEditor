@@ -2,20 +2,23 @@ import express from "express"
 import cors from 'cors'
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
+import path from "path";
 import { errorHandler } from "./middleware/errorHandler.middleware.js";
 
 const app = express();
+
+const __dirname = path.resolve();
 
 app.use(cors({
     origin: function (origin, callback) {
         const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5173,http://localhost:3000')
             .split(',')
             .map(s => s.trim())
-        // Allow requests with no origin (mobile apps, curl, etc.)
+
         if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
             callback(null, true)
         } else {
-            callback(null, true) // Be permissive in development
+            callback(null, true)
         }
     },
     credentials: true,
@@ -28,7 +31,6 @@ app.use(express.urlencoded({ extended: true, limit: '16kb' }));
 app.use(express.static('public'));
 app.use(cookieParser());
 
-// Request logging (development only)
 if (process.env.NODE_ENV !== 'production') {
     app.use(morgan('dev'));
 }
@@ -77,13 +79,12 @@ app.use("/api/v1/settings", settingsRoutes)
 import executionRoutes from "./routes/execution.routes.js"
 app.use("/api/v1/execute", executionRoutes)
 
-// ==================== 404 HANDLER ====================
-app.use((req, res) => {
-    res.status(404).json({
-        success: false,
-        message: `Route ${req.originalUrl} not found`
-    })
-})
+// ==================== SERVE FRONTEND ====================
+app.use(express.static(path.join(__dirname, "frontend/dist")));
+
+app.get("*", (req, res) => {
+    res.sendFile(path.join(__dirname, "frontend", "dist", "index.html"));
+});
 
 // ==================== GLOBAL ERROR HANDLER ====================
 app.use(errorHandler)
